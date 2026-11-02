@@ -1,5 +1,9 @@
 # CrossApp — Бібліотека
 
+Поточний етап: **лабораторна 3**. Звіти: [лаба 2](reports/lab02.md), [лаба 3](reports/lab03.md).
+Без аргументів консоль імпортує CSV; інформація про середовище доступна через `--environment` або `--json`.
+Розділи 1–5 нижче зберігають історичні результати першої лабораторної.
+
 Наскрізний семестровий проєкт з дисципліни «Крос-платформне програмування».
 
 ---
@@ -127,3 +131,59 @@ git switch main
 
 Кожен наступний коміт продовжує попередню лабораторну. bin/obj/publish не версіонуються;
 публікацію потрібного етапу слід повторно зібрати після перемикання.
+
+
+## 7. Лабораторна 3: records, pattern matching, CSV
+
+Повний [звіт із ходом роботи, поясненнями патернів, виводом та сценарієм захисту](reports/lab03.md).
+
+```text
+src/Core/Dto/BookDto.cs            - книга, необов'язковий Author
+src/Core/Dto/ReaderDto.cs          - читач, необов'язковий Email
+src/Core/Dto/ImportResult.cs       - прийняті записи та помилки
+src/Core/Import/BookCsvImporter.cs - імпорт і ParseLine зі switch expression
+src/Cli/Program.cs                - аргументи, виклики Core, вивід
+```
+
+CSV: UTF-8, роздільник `;`, колонки `id;isbn;title;year`, необов'язковий заголовок.
+Author відсутній у CSV і залишається null. Порожні рядки та коментарі `#` ігноруються.
+Рік - ціле число від 1450 до поточного року; використано InvariantCulture.
+Назви з `;`, CSV-лапки та багаторядкові поля не підтримуються в цьому простому форматі.
+Пошкоджені рядки повертаються як помилки з фізичними номерами рядків.
+
+```powershell
+dotnet build
+dotnet run --project src/Cli
+dotnet run --project src/Cli -- data/sample.csv
+dotnet run --project src/Cli -- data/valid.csv
+dotnet run --project src/Cli -- data/missing.csv
+$LASTEXITCODE
+dotnet run --project src/Cli -- --environment
+```
+
+Очікувано: sample.csv - 10 книг, 3 помилки (рядки 12, 13, 14);
+valid.csv - 10 книг, 0 помилок; неіснуючий файл - повідомлення з повним шляхом і код 1.
+При успішному читанні, включно з частково пошкодженим CSV, код виходу 0.
+Консоль показує перші 5 книг і всі причини пропуску. Перевірено 14 сценаріїв CLI.
+
+### Перемикання для захисту
+
+З кореня репозиторію, за чистого `git status`:
+
+```powershell
+git switch --detach lab01
+dotnet run --project src/Cli
+
+git switch --detach lab02
+dotnet run --project src/Cli
+# Команди publish та запуск Cli.exe: розділ 6 або reports/lab02.md
+
+git switch --detach lab03
+dotnet run --project src/Cli -- data/sample.csv
+
+git switch main
+```
+
+Теги зберігають окремі завершені етапи. У detached HEAD можна демонструвати код;
+для подальшої роботи поверніться на main. Після редагування прикладів на захисті
+приберіть власні демонстраційні зміни перед наступним перемиканням.
