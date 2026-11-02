@@ -79,6 +79,10 @@ UTF-8 (допускається BOM), роздільник `;`, рівно чо�
 ## Розбір через switch expression
 
 ```csharp
+    private static ParseOutcome ParseLine(string line)
+    {
+        string[] parts = line.Split(Separator, StringSplitOptions.TrimEntries);
+
         return parts switch
         {
             { Length: < 4 } => new ParseFailed($"очікую 4 колонки, отримав {parts.Length}"),
@@ -161,7 +165,7 @@ dotnet run --project src/Cli -- --json
 
 ## Перевірка вимог
 
-Збірка всього solution під net8.0 і net10.0: 0 помилок, 0 попереджень.
+Збірка solution (Core: net8.0 і net10.0; Cli: net10.0): 0 помилок, 0 попереджень.
 Виконано 14 автоматичних перевірок CLI на реальному зібраному застосунку;
 додаткові файли створювалися в тимчасовому каталозі та не змінювали sample.csv:
 
