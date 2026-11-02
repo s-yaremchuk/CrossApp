@@ -86,3 +86,44 @@ Runtime            : .NET 10.0.12
 
 ### 2. Аргумент командного рядка `--json`
 Реалізовано перевірку прапорця `--json` за допомогою `System.Text.Json` з виводом структурованих даних одним рядком із підтримкою кодування кирилиці.
+
+
+## 6. Лабораторна 2: Core + Cli, multi-targeting, публікація
+
+Попередні розділи фіксують результати лабораторної 1. Поточний solution - `CrossApp.slnx`.
+Core (`net8.0;net10.0`) отримує дані середовища; Cli (`net10.0`) форматує їх.
+Залежність: `Cli → Core`. Докладний [звіт, структура, команди й сценарій захисту](reports/lab02.md).
+
+Каталоги Core: `Dto` - формати даних з лабораторної 3, `Domain` - сутності з лабораторної 4,
+`Storage` - сховища з лабораторної 5. Створюються разом із першими типами.
+
+| RID | Режим | Байтів | МіБ | Потрібен runtime |
+| --- | --- | ---: | ---: | --- |
+| win-x64 | self-contained | 80,588,118 | 76.855 | ні |
+| win-x64 | framework-dependent | 203,766 | 0.194 | так, .NET 10 |
+
+Self-contained включає runtime; framework-dependent потребує встановленого .NET 10.
+
+```powershell
+dotnet build
+dotnet run --project src/Cli
+dotnet publish src/Cli -c Release -f net10.0 -r win-x64 --self-contained true -o src/Cli/bin/publish/lab02/self-contained
+dotnet publish src/Cli -c Release -f net10.0 -r win-x64 --self-contained false -o src/Cli/bin/publish/lab02/framework-dependent
+.\src\Cli\bin\publish\lab02\self-contained\Cli.exe
+.\src\Cli\bin\publish\lab02\framework-dependent\Cli.exe
+```
+
+### Перемикання між лабораторними
+
+Перед перемиканням `git status` має бути чистим. Теги позначають завершені роботи:
+
+```powershell
+git switch --detach lab01
+git switch --detach lab02
+dotnet build
+dotnet run --project src/Cli
+git switch main
+```
+
+Кожен наступний коміт продовжує попередню лабораторну. bin/obj/publish не версіонуються;
+публікацію потрібного етапу слід повторно зібрати після перемикання.
