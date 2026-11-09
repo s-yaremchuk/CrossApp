@@ -1,6 +1,50 @@
 # CrossApp — Бібліотека
 
-**Для захисту з додатковими завданнями** використовуй теги `lab02-full` і `lab03-full`. Команди та результати: [лабораторна 2](reports/lab02-extra.md), [лабораторна 3](reports/lab03-extra.md). Теги lab02 та lab03 позначають початкові версії.
+Для захисту обери [lab02-full](https://github.com/s-yaremchuk/CrossApp/tree/lab02-full) або [lab03-full](https://github.com/s-yaremchuk/CrossApp/tree/lab03-full). Виконуй команди PowerShell з каталогу `CrossApp`, де лежить `CrossApp.slnx`.
+
+## Лабораторна 2 з додатковими завданнями
+
+~~~powershell
+git switch --detach lab02-full
+dotnet run --project src/Cli -p:DemoFramework=net8.0
+dotnet run --project src/Cli
+./scripts/Compare-Publish.ps1
+~~~
+
+Для першого запуску потрібен runtime .NET 8. Рядок `BuildNote` показує «збірка Core під net8.0» для першого запуску та «збірка Core під net10.0» для другого. Директива `#if NET10_0_OR_GREATER` вибирає текст під час компіляції.
+
+Скрипт збирає чотири публікації Release для `win-x64` і запускає кожну через `Cli.exe --json`. На тегу `lab02-full` отримано такі результати.
+
+| Режим | Файлів | Байтів | Запуск |
+| --- | ---: | ---: | --- |
+| Framework-dependent | 7 | 225146 | успішно |
+| Self-contained | 194 | 80609498 | успішно |
+| Self-contained + PublishSingleFile | 3 | 73581020 | успішно |
+| Self-contained + PublishTrimmed | 35 | 20545385 | успішно |
+
+`PublishSingleFile=true` пакує компоненти в один виконуваний файл. Поруч залишаються файли символів PDB. `PublishTrimmed=true` вилучає невикористаний код. Якщо застосунок знаходить член типу через рефлексію, аналізатор може вилучити потрібний член. Метадані для JSON генерує `ReportJsonContext`. Перевірена збірка завершилася без попереджень ILLink. [Звіт із вимірами](reports/lab02-extra.md)
+
+## Лабораторна 3 з додатковими завданнями
+
+~~~powershell
+git switch --detach lab03-full
+dotnet run --project src/Cli -- data/sample.json
+dotnet run --project src/Cli -- data/mixed.csv
+dotnet run --project src/Cli -- data/sample.csv
+git switch main
+~~~
+
+CLI вибирає імпортер за розширенням файла. JSON містить масив книг. Якщо один елемент має неправильний тип поля, програма вказує його номер і продовжує імпорт. Прапорець `--json` окремо виводить інформацію про середовище.
+
+Для змішаного CSV перший змістовний рядок має бути `type;fields`. Префікс `B` позначає книгу у форматі `B;id;isbn;title;year`. Префікс `R` позначає читача у форматі `R;id;ім’я` або `R;id;ім’я;email`. Невідомий префікс дає помилку з номером рядка.
+
+| Файл | Усього | Прийнято | Пропущено | Помилок |
+| --- | ---: | ---: | ---: | ---: |
+| sample.json | 3 | 2 | 1 | 33,33% |
+| mixed.csv | 4 | 3 | 1 | 25,00% |
+| sample.csv | 13 | 10 | 3 | 23,08% |
+
+Після імпорту CLI друкує статистику одним рядком. Частка помилок дорівнює `100 × пропущено / усього`. Для порожнього набору результат дорівнює 0%. [Звіт із прикладами](reports/lab03-extra.md)
 
 Поточний етап: **лабораторна 3**. Звіти: [лаба 2](reports/lab02.md), [лаба 3](reports/lab03.md).
 Без аргументів консоль імпортує CSV; інформація про середовище доступна через `--environment` або `--json`.
@@ -319,7 +363,7 @@ public sealed record ImportResult<T>(IReadOnlyList<T> Items, IReadOnlyList<strin
   до поточного року включно. Author може бути невідомий; у поточному CSV його немає,
   тому значення null є очікуваним, а не помилкою.
 - ReaderDto: Id та FullName потрібні для ідентифікації читача; Email може бути відсутнім.
-  Цей DTO описує другий вид даних бібліотеки, його імпорт у цій роботі не реалізується.
+  На тегу `lab03-full` змішаний CSV імпортує читачів із префіксом `R`.
 - ImportResult<T>: Items та Errors завжди існують, навіть якщо порожні.
   Імпортер повертає колекції через AsReadOnly, щоб викликач не змінював результат.
 
@@ -432,7 +476,7 @@ valid.csv - 10 книг, 0 помилок; неіснуючий файл - по�
 дописати один зламаний рядок і показати нову помилку, потім перевірити неіснуючий шлях.
 Після демонстрації видалити лише власний доданий рядок перед перемиканням тегів.
 
-### Перемикання для захисту
+### Перемикання для захисту повних версій
 
 З кореня репозиторію, за чистого `git status`. На іншому комп'ютері після клонування
 або оновлення виконайте `git fetch origin --tags`:
@@ -441,11 +485,11 @@ valid.csv - 10 книг, 0 помилок; неіснуючий файл - по�
 git switch --detach lab01
 dotnet run --project src/Cli
 
-git switch --detach lab02
+git switch --detach lab02-full
 dotnet run --project src/Cli
-# Команди publish та запуск Cli.exe: розділ 6 або reports/lab02.md
+./scripts/Compare-Publish.ps1
 
-git switch --detach lab03
+git switch --detach lab03-full
 dotnet run --project src/Cli -- data/sample.csv
 
 git switch main
