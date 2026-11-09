@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using Core;
 
@@ -8,10 +7,7 @@ EnvironmentReport report = EnvironmentInfo.Collect();
 
 if (args.Contains("--json"))
 {
-    Console.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions
-    {
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-    }));
+    Console.WriteLine(JsonSerializer.Serialize(report, ReportJsonContext.Default.EnvironmentReport));
     return;
 }
 
