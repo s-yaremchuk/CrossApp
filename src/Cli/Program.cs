@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using Core;
 using Core.Dto;
@@ -13,10 +12,7 @@ if (args is ["--environment"] or ["--json"])
 
     if (args.Contains("--json"))
     {
-        Console.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        }));
+        Console.WriteLine(JsonSerializer.Serialize(report, ReportJsonContext.Default.EnvironmentReport));
         return 0;
     }
 
@@ -40,7 +36,7 @@ if (args is ["--environment"] or ["--json"])
 
 if (args.Length > 1)
 {
-    Console.Error.WriteLine("Використання: Cli [шлях.csv] | --environment | --json");
+    Console.Error.WriteLine("Використання: Cli [шлях.csv|шлях.json] | --environment | --json");
     return 1;
 }
 
@@ -54,18 +50,36 @@ try
         return 1;
     }
 
-    ImportResult<BookDto> result = BookCsvImporter.Load(fullPath);
+    ImportResult<LibraryRecord> result = Path.GetExtension(fullPath).ToLowerInvariant() switch
+    {
+        ".csv" => BookCsvImporter.LoadCatalog(fullPath),
+        ".json" => BookJsonImporter.Load(fullPath),
+        _ => throw new NotSupportedException("Підтримуються файли .csv та .json")
+    };
     Console.WriteLine($"Завантажено записів: {result.Items.Count}");
-    foreach (BookDto book in result.Items.Take(5))
-        Console.WriteLine($"  {book.Id,-6} {book.Isbn,-13} {book.Title,-30} {book.Year,4}");
+    foreach (var item in result.Items.Take(5))
+    {
+        switch (item)
+        {
+            case BookDto book:
+                Console.WriteLine($"  {book.Id,-6} {book.Isbn,-13} {book.Title,-30} {book.Year,4}");
+                break;
+            case ReaderDto reader:
+                Console.WriteLine($"  Читач {reader.Id}: {reader.FullName} {reader.Email}");
+                break;
+        }
+    }
 
     Console.WriteLine($"Пропущено рядків: {result.Errors.Count}");
     foreach (string error in result.Errors)
         Console.WriteLine($"  ! {error}");
 
+    int total = result.Items.Count + result.Errors.Count;
+    double percent = total == 0 ? 0 : 100.0 * result.Errors.Count / total;
+    Console.WriteLine($"Усього: {total} | прийнято: {result.Items.Count} | пропущено: {result.Errors.Count} | помилок: {percent:F2}%");
     return 0;
 }
-catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
 {
     Console.Error.WriteLine($"Не вдалося прочитати файл '{path}': {ex.Message}");
     return 1;
