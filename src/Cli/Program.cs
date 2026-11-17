@@ -9,6 +9,9 @@ using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+if (args is ["--storage", var action, var storePath])
+    return StorageDemo.Run(action, storePath);
+
 if (args is ["--events"] or ["--events", "--sink-console"] or ["--events", "--sink-file"])
 {
     INotificationSink? sink = args.Last() switch

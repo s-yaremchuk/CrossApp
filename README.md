@@ -509,6 +509,22 @@ git switch main
 
 За повторного запуску в пам’яті знову 16 початкових записів. У файловому режимі каталог збільшується на один запис за запуск. Додаткові завдання включають кеш читання за номером, пошук за предикатом та фабрику StoreFactory.Create(args). [Звіт, вивід і команди для захисту](reports/lab05.md).
 
+
+### Збереження історії видач
+
+Окремий сценарій зберігає LoanDto та дати повернення між процесами через CatalogService і JsonLoanRepository.
+
+~~~powershell
+$catalog = Join-Path $env:TEMP ("library-" + [guid]::NewGuid() + ".json")
+dotnet run --project src/Cli -- --storage issue $catalog
+dotnet run --project src/Cli -- --storage show $catalog
+dotnet run --project src/Cli -- --storage return $catalog
+dotnet run --project src/Cli -- --storage show $catalog
+Remove-Item -LiteralPath $catalog,($catalog + ".lock")
+~~~
+
+Перші два запуски показують Open, останній — Closed. Повторне повернення повертає код 1.
+
 ## Лабораторна 6 — доменні події та делегати
 
 LendingService.Changed повідомляє про успішні зміни. Cli підписує логер і лічильник. Журнали зберігаються у logs поруч із виконуваним файлом. Повторна видача не збільшує лічильник. Після відписки логера працює лічильник, після обох відписок змінюється лише стан.
