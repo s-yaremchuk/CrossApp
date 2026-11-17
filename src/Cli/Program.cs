@@ -6,6 +6,9 @@ using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+if (args is ["--loans"])
+    return LoanDemo.Run();
+
 if (args is ["--environment"] or ["--json"])
 {
     EnvironmentReport report = EnvironmentInfo.Collect();

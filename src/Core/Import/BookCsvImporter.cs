@@ -12,7 +12,7 @@ public static class BookCsvImporter
     public static ImportResult<BookDto> Load(string path)
     {
         var result = Read(path, allowMixed: false);
-        return new(result.Items.Cast<BookDto>().ToArray(), result.Errors);
+        return new(result.Items.Cast<BookDto>().ToArray(), result.Errors) { SourceLines = result.SourceLines };
     }
 
     public static ImportResult<LibraryRecord> LoadCatalog(string path) => Read(path, allowMixed: true);
@@ -20,6 +20,7 @@ public static class BookCsvImporter
     private static ImportResult<LibraryRecord> Read(string path, bool allowMixed)
     {
         var items = new List<LibraryRecord>();
+        var sourceLines = new List<int>();
         bool mixed = false;
         var errors = new List<string>();
         string[] lines = File.ReadAllLines(path, Encoding.UTF8);
@@ -46,6 +47,7 @@ public static class BookCsvImporter
             {
                 case ParseOk ok:
                     items.Add(ok.Value);
+                    sourceLines.Add(i + 1);
                     break;
                 case ParseFailed failed:
                     errors.Add($"рядок {i + 1}: {failed.Reason}");
@@ -53,7 +55,7 @@ public static class BookCsvImporter
             }
         }
 
-        return new ImportResult<LibraryRecord>(items.AsReadOnly(), errors.AsReadOnly());
+        return new ImportResult<LibraryRecord>(items.AsReadOnly(), errors.AsReadOnly()) { SourceLines = sourceLines.AsReadOnly() };
     }
 
     private static ParseOutcome ParseLine(string line, bool mixed)
