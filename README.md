@@ -26,6 +26,7 @@ NuGet для відновлення відсутніх targeting packs, зокр
 | 3 | `lab03-full` | Імпорт CSV та JSON |
 | 4 | `lab04` | Видача та повернення примірників |
 | 5 | `lab05` | Сервісний шар і два сховища |
+| 6 | `lab06` | Доменні події та делегати |
 
 ## Лабораторна 1 — середовище виконання
 
@@ -507,3 +508,19 @@ git switch main
 ~~~
 
 За повторного запуску в пам’яті знову 16 початкових записів. У файловому режимі каталог збільшується на один запис за запуск. Додаткові завдання включають кеш читання за номером, пошук за предикатом та фабрику StoreFactory.Create(args). [Звіт, вивід і команди для захисту](reports/lab05.md).
+
+## Лабораторна 6 — доменні події та делегати
+
+LendingService.Changed повідомляє про успішні зміни. Cli підписує логер і лічильник. Журнали зберігаються у logs поруч із виконуваним файлом. Повторна видача не збільшує лічильник. Після відписки логера працює лічильник, після обох відписок змінюється лише стан.
+
+~~~powershell
+git switch --detach lab06
+dotnet build
+dotnet run --no-build --project src/Cli -- --events
+Get-Content src/Cli/bin/Debug/net10.0/logs/app.log -Tail 3
+dotnet run --no-build --project src/Cli -- --events --sink-console
+dotnet run --no-build --project src/Cli -- --events --sink-file
+git switch main
+~~~
+
+Додаткові завдання реалізують INotificationSink із ConsoleSink та FileSink і callback Action<string> в імпортері CSV. Пошук використовує Func<BookCopy, bool>. [Звіт і детальний сценарій захисту](reports/lab06.md).

@@ -9,6 +9,17 @@ using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+if (args is ["--events"] or ["--events", "--sink-console"] or ["--events", "--sink-file"])
+{
+    INotificationSink? sink = args.Last() switch
+    {
+        "--sink-console" => new ConsoleSink(),
+        "--sink-file" => new FileSink(Path.Combine(AppContext.BaseDirectory, "logs", "sink.log")),
+        _ => null
+    };
+    return EventDemo.Run(StoreFactory.Create([]), sink);
+}
+
 if (args.All(a => a is "--file" or "--cache"))
 {
     try

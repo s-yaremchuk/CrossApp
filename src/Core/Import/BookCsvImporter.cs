@@ -9,15 +9,15 @@ public static class BookCsvImporter
     private const char Separator = ';';
     private const string Header = "id;isbn;title;year";
 
-    public static ImportResult<BookDto> Load(string path)
+    public static ImportResult<BookDto> Load(string path, Action<string>? onSkipped = null)
     {
-        var result = Read(path, allowMixed: false);
+        var result = Read(path, allowMixed: false, onSkipped);
         return new(result.Items.Cast<BookDto>().ToArray(), result.Errors) { SourceLines = result.SourceLines };
     }
 
     public static ImportResult<LibraryRecord> LoadCatalog(string path) => Read(path, allowMixed: true);
 
-    private static ImportResult<LibraryRecord> Read(string path, bool allowMixed)
+    private static ImportResult<LibraryRecord> Read(string path, bool allowMixed, Action<string>? onSkipped = null)
     {
         var items = new List<LibraryRecord>();
         var sourceLines = new List<int>();
@@ -50,7 +50,9 @@ public static class BookCsvImporter
                     sourceLines.Add(i + 1);
                     break;
                 case ParseFailed failed:
-                    errors.Add($"рядок {i + 1}: {failed.Reason}");
+                    var message = $"рядок {i + 1}: {failed.Reason}";
+                    errors.Add(message);
+                    onSkipped?.Invoke(message);
                     break;
             }
         }
