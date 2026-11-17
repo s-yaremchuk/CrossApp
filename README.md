@@ -15,7 +15,7 @@ dotnet run --project src/Cli -- --environment
 dotnet run --project src/Cli -- --json
 ```
 
-Без аргументів запускається імпорт `data/sample.csv`. `--json` виводить інформацію
+Без аргументів запускається каталог у пам’яті. CSV імпортується за явно переданим шляхом. `--json` виводить інформацію
 про середовище, а для імпорту книг передай шлях до data/sample.json. Під час першої збірки потрібен доступ до
 NuGet для відновлення відсутніх targeting packs, зокрема net8.0 для Core.
 
@@ -25,6 +25,7 @@ NuGet для відновлення відсутніх targeting packs, зокр
 | 2 | `lab02-full` | Core, Cli та публікація |
 | 3 | `lab03-full` | Імпорт CSV та JSON |
 | 4 | `lab04` | Видача та повернення примірників |
+| 5 | `lab05` | Сервісний шар і два сховища |
 
 ## Лабораторна 1 — середовище виконання
 
@@ -488,3 +489,21 @@ git switch main
 ~~~
 
 Додаткові завдання охоплюють перетворення результату імпорту на примірники з номерами помилкових рядків, ліміт відкритих видач та перехід Open → Closed через switch. [Звіт і команди для захисту](reports/lab04.md).
+
+## Лабораторна 5 — сервісний шар і два сховища
+
+LendingService отримує IBookStore через конструктор. InMemoryBookStore починає з 16 примірників. FileBookStore зберігає каталог у data/catalog.json поруч із виконуваним файлом. Сценарій додає книгу, видає її, знаходить за номером, перевіряє дубль, повертає та показує список.
+
+~~~powershell
+git switch --detach lab05
+dotnet build
+dotnet run --no-build --project src/Cli
+dotnet run --no-build --project src/Cli -- --file
+dotnet run --no-build --project src/Cli -- --file
+Get-Content src/Cli/bin/Debug/net10.0/data/catalog.json
+dotnet run --no-build --project src/Cli -- --cache
+dotnet run --no-build --project src/Cli -- --file --cache
+git switch main
+~~~
+
+За повторного запуску в пам’яті знову 16 початкових записів. У файловому режимі каталог збільшується на один запис за запуск. Додаткові завдання включають кеш читання за номером, пошук за предикатом та фабрику StoreFactory.Create(args). [Звіт, вивід і команди для захисту](reports/lab05.md).

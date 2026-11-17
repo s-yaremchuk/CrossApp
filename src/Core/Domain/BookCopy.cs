@@ -42,5 +42,10 @@ public sealed class BookCopy
         IsIssued = true;
     }
 
-    internal void Return() => IsIssued = false;
+    internal void Return()
+    {
+        if (!IsIssued)
+            throw new InvalidOperationException($"Примірник {Id} вже доступний.");
+        IsIssued = false;
+    }
 }

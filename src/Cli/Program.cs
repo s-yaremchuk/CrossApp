@@ -1,3 +1,6 @@
+using Core.Abstractions;
+using Core.Services;
+using Core.Storage;
 using System.Text;
 using System.Text.Json;
 using Core;
@@ -5,6 +8,25 @@ using Core.Dto;
 using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
+
+if (args.All(a => a is "--file" or "--cache"))
+{
+    try
+    {
+        var store = StoreFactory.Create(args);
+        Console.WriteLine($"Сховище: {store.GetType().Name}");
+        if (args.Contains("--file")) Console.WriteLine($"Файл: {StoreFactory.DataPath}");
+        CatalogDemo.Run(new LendingService(store));
+        if (store is CachingBookStore cache) Console.WriteLine($"Влучання кешу: {cache.Hits}");
+        return 0;
+    }
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
+        or InvalidOperationException or ArgumentException or InvalidDataException)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 1;
+    }
+}
 
 if (args is ["--loans"])
     return LoanDemo.Run();
@@ -86,4 +108,17 @@ catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAcc
 {
     Console.Error.WriteLine($"Не вдалося прочитати файл '{path}': {ex.Message}");
     return 1;
+}
+
+internal static class StoreFactory
+{
+    internal static string DataPath => Path.Combine(AppContext.BaseDirectory, "data", "catalog.json");
+
+    internal static IBookStore Create(string[] args)
+    {
+        IBookStore store = args.Contains("--file")
+            ? new FileBookStore(DataPath)
+            : new InMemoryBookStore(SampleData.Copies());
+        return args.Contains("--cache") ? new CachingBookStore(store) : store;
+    }
 }
