@@ -6,6 +6,9 @@ using Core.Import;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+if (args is ["--storage", var action, var storePath])
+    return StorageDemo.Run(action, storePath);
+
 if (args is ["--loans"])
     return LoanDemo.Run();
 

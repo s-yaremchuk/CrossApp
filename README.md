@@ -488,3 +488,26 @@ git switch main
 ~~~
 
 Додаткові завдання охоплюють перетворення результату імпорту на примірники з номерами помилкових рядків, ліміт відкритих видач та перехід Open → Closed через switch. [Звіт і команди для захисту](reports/lab04.md).
+
+## Лабораторна 5 — сховище та сервіс видач
+
+Робоча гілка `lab05-storage`. Реалізована частина охоплює збереження стану між запусками та пошук за номером видачі. Повний перелік завдань потребує звірки з методичкою № 5.
+
+~~~powershell
+git switch lab05-storage
+dotnet build
+$catalog = Join-Path $env:TEMP ("library-" + [guid]::NewGuid() + ".json")
+dotnet run --no-build --project src/Cli -- --storage issue $catalog
+dotnet run --no-build --project src/Cli -- --storage show $catalog
+dotnet run --no-build --project src/Cli -- --storage return $catalog
+dotnet run --no-build --project src/Cli -- --storage return $catalog
+$LASTEXITCODE
+dotnet run --no-build --project src/Cli -- --storage show $catalog
+Get-Content -Encoding utf8 $catalog
+Remove-Item -LiteralPath $catalog,($catalog + ".lock")
+git switch main
+~~~
+
+Кожна команда запускає окремий процес. Після видачі та повторного читання стан дорівнює Open. Після повернення стан дорівнює Closed. Повторне повернення дає код 1. Наступне читання підтверджує, що запис залишився закритим.
+
+CatalogService працює через ILoanRepository. JsonLoanRepository зберігає знімки LoanDto. Під час читання реєстр відновлює сутності через Loan.FromDto. Під час запису сховище перевіряє доменну операцію до заміни файла.
